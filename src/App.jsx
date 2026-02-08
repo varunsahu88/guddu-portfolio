@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { 
   ArrowUpRight, ChevronRight, Github, Lock, Unlock, X, Menu, 
   Sparkles, PenTool, Activity, Bot, Target, User, Upload, Loader2, 
@@ -22,6 +23,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
 
 // Animation variants
@@ -117,7 +119,7 @@ function App() {
     }
   }, [chatMessages]);
 
-  // Firebase listeners (simplified for backup)
+  // Firebase listeners
   useEffect(() => {
     try {
       const projCol = collection(db, 'artifacts', appId, 'public', 'data', 'projects');
@@ -127,8 +129,22 @@ function App() {
       }, (err) => console.log('Projects listener error:', err));
       return () => unsub();
     } catch (e) {
-      console.log('Firebase not configured:', e);
+      console.log('Projects listener error:', e);
     }
+  }, []);
+
+  // Load persisted profile image (so refresh doesn't wipe it)
+  useEffect(() => {
+    (async () => {
+      try {
+        const profileDoc = doc(db, 'artifacts', appId, 'public', 'data', 'profile', 'identity');
+        const snap = await getDoc(profileDoc);
+        const data = snap.exists() ? snap.data() : null;
+        if (data?.imageUrl) setProfileData({ imageUrl: String(data.imageUrl) });
+      } catch (e) {
+        console.log('Profile load error:', e);
+      }
+    })();
   }, []);
 
   const handleAdminLogin = (e) => {
@@ -194,11 +210,28 @@ function App() {
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setIsUpdatingImg(true);
-    // Simplified - just create object URL for demo
-    const url = URL.createObjectURL(file);
-    setProfileData({ imageUrl: url });
-    setIsUpdatingImg(false);
+    try {
+      // Upload to Firebase Storage and persist URL in Firestore
+      const safeName = String(file.name || 'photo').replace(/[^a-z0-9._-]/gi, '_');
+      const storagePath = `profilePhotos/${user?.uid || 'demo-user'}/${Date.now()}_${safeName}`;
+      const storageRef = ref(storage, storagePath);
+
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+
+      setProfileData({ imageUrl: url });
+
+      const profileDoc = doc(db, 'artifacts', appId, 'public', 'data', 'profile', 'identity');
+      await setDoc(profileDoc, { imageUrl: url, updatedAt: Date.now() }, { merge: true });
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      alert('Photo upload failed. Firebase Storage rules/config check karo.');
+    } finally {
+      setIsUpdatingImg(false);
+      if (e?.target) e.target.value = '';
+    }
   };
 
   const handleRoast = async () => {
