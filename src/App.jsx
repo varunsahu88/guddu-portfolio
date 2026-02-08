@@ -291,18 +291,35 @@ function App() {
   const handleAIChat = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
+
     const userMsg = chatInput;
-    setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    const nextHistory = [...chatMessages, { role: 'user', text: userMsg }];
+
+    setChatMessages(nextHistory);
     setChatInput("");
     setIsTyping(true);
-    // Simulated AI response
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        text: `Interesting question about "${userMsg}"! Main Guddu ka AI twin hoon - design aur building ke baare mein kuch bhi pucho.` 
-      }]);
+
+    try {
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMsg,
+          history: nextHistory.slice(-10),
+        }),
+      });
+
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data?.error || 'Chat failed');
+
+      const aiText = String(data?.text || '').trim() || 'Sorry, abhi response nahi aaya. Thoda baad try karo.';
+      setChatMessages(prev => [...prev, { role: 'assistant', text: aiText }]);
+    } catch (err) {
+      console.error(err);
+      setChatMessages(prev => [...prev, { role: 'assistant', text: 'Bhai server error aa gaya. API key/env set hai kya? (GEMINI_API_KEY)' }]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleDraftContact = async () => {
