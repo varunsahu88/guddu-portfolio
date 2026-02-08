@@ -15,7 +15,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCGdqMMEEIE8jugPoXiF9RE-oqm9yy8uCY",
   authDomain: "guddu-portfolio.firebaseapp.com",
   projectId: "guddu-portfolio",
-  storageBucket: "guddu-portfolio.firebasestorage.app",
+  storageBucket: "guddu-portfolio.appspot.com",
   messagingSenderId: "419842562841",
   appId: "1:419842562841:web:6f7453e51a16a5a21a8388",
   measurementId: "G-24QZBYXKSV"
