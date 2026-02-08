@@ -133,7 +133,7 @@ function App() {
 
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (adminPass === "guddu123") {
+    if (adminPass === "guddu88") {
       setIsAdmin(true);
       setShowAdminModal(false);
       setAdminPass("");
