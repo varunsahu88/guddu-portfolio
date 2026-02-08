@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// NOTE: Firebase Storage is not enabled on Spark plan for this project.
+// We persist the profile photo in Firestore as a compressed data URL instead.
+
 import { 
   ArrowUpRight, ChevronRight, Github, Lock, Unlock, X, Menu, 
   Sparkles, PenTool, Activity, Bot, Target, User, Upload, Loader2, 
@@ -23,7 +25,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
 
 // Animation variants
@@ -212,22 +213,65 @@ function App() {
     if (!file) return;
 
     setIsUpdatingImg(true);
+
+    const profileDoc = doc(db, 'artifacts', appId, 'public', 'data', 'profile', 'identity');
+
+    // Spark plan workaround: store a compressed dataURL in Firestore (no Firebase Storage).
+    const fileToDataUrl = (f) => new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result || ''));
+      r.onerror = reject;
+      r.readAsDataURL(f);
+    });
+
+    const imgFromDataUrl = (dataUrl) => new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+
+    const compressToJpegDataUrl = (img, maxW = 720, maxH = 720, quality = 0.72) => {
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      const scale = Math.min(1, maxW / w, maxH / h);
+      const cw = Math.max(1, Math.round(w * scale));
+      const ch = Math.max(1, Math.round(h * scale));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, cw, ch);
+      return canvas.toDataURL('image/jpeg', quality);
+    };
+
     try {
-      // Upload to Firebase Storage and persist URL in Firestore
-      const safeName = String(file.name || 'photo').replace(/[^a-z0-9._-]/gi, '_');
-      const storagePath = `profilePhotos/${user?.uid || 'demo-user'}/${Date.now()}_${safeName}`;
-      const storageRef = ref(storage, storagePath);
+      const originalDataUrl = await fileToDataUrl(file);
+      const img = await imgFromDataUrl(originalDataUrl);
 
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      // Try a few settings to stay under Firestore 1MB doc limit.
+      const candidates = [
+        { maxW: 720, maxH: 720, q: 0.72 },
+        { maxW: 640, maxH: 640, q: 0.65 },
+        { maxW: 512, maxH: 512, q: 0.60 },
+        { maxW: 420, maxH: 420, q: 0.55 },
+      ];
 
-      setProfileData({ imageUrl: url });
+      let dataUrl = '';
+      for (const c of candidates) {
+        dataUrl = compressToJpegDataUrl(img, c.maxW, c.maxH, c.q);
+        // rough size check (base64 ~ 4/3 bytes) — keep it comfortably small
+        if (dataUrl.length < 700_000) break;
+      }
 
-      const profileDoc = doc(db, 'artifacts', appId, 'public', 'data', 'profile', 'identity');
-      await setDoc(profileDoc, { imageUrl: url, updatedAt: Date.now() }, { merge: true });
+      if (!dataUrl) throw new Error('Failed to create data URL');
+
+      setProfileData({ imageUrl: dataUrl });
+      await setDoc(profileDoc, { imageUrl: dataUrl, updatedAt: Date.now() }, { merge: true });
     } catch (err) {
-      console.error('Image upload failed:', err);
-      alert('Photo upload failed. Firebase Storage rules/config check karo.');
+      console.error('Image save failed:', err);
+      alert('Photo upload failed. Image size zyada ho sakta hai ya Firestore permission issue.');
     } finally {
       setIsUpdatingImg(false);
       if (e?.target) e.target.value = '';
