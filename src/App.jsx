@@ -369,6 +369,34 @@ function App() {
           </button>
         )}
 
+        {/* Preview strip (fills the "blank" space in compact cards) */}
+        {compact && (
+          <div className="relative z-10 rounded-2xl border border-zinc-800 bg-black/30 overflow-hidden">
+            <div className="h-[88px] md:h-[140px] w-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-transparent to-blue-500/15" />
+              <div className="absolute inset-0 opacity-[0.35]" style={{
+                backgroundImage:
+                  'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0)',
+                backgroundSize: '16px 16px',
+              }} />
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-orange-500/10 blur-2xl" />
+              <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-blue-500/10 blur-2xl" />
+
+              {/* watermark initials */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-4xl md:text-6xl font-black tracking-tight text-white/10 select-none">
+                  {(title || 'EX').slice(0, 2).toUpperCase()}
+                </div>
+              </div>
+
+              {/* corner chip */}
+              <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full border border-zinc-800 bg-black/40 text-[9px] tracking-[0.2em] uppercase font-black text-orange-300">
+                {cat}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Top row */}
         <div className="relative z-10 flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -378,7 +406,7 @@ function App() {
               </span>
               <span className="h-[3px] w-[3px] rounded-full bg-zinc-700" />
               <span className="text-zinc-500 text-[9px] md:text-[10px] tracking-[0.18em] font-black uppercase">
-                Case Study
+                {compact ? 'Experiment' : 'Case Study'}
               </span>
             </div>
             <h3 className={`mt-2 font-black text-white truncate ${compact ? 'text-[14px] md:text-2xl' : 'text-[15px] md:text-4xl'}`}>
@@ -395,7 +423,7 @@ function App() {
 
         {/* Bottom content */}
         <div className="relative z-10">
-          <p className={`text-zinc-400 leading-relaxed font-medium ${compact ? 'text-[10px] md:text-xs line-clamp-3' : 'text-[10px] md:text-sm line-clamp-2 md:line-clamp-3'}`}>
+          <p className={`text-zinc-400 leading-relaxed font-medium ${compact ? 'text-[10px] md:text-xs line-clamp-2 md:line-clamp-3' : 'text-[10px] md:text-sm line-clamp-2 md:line-clamp-3'}`}>
             {desc || (compact ? 'Quick experiment. Click to open.' : 'Click to open. Add a short description from Admin to make this card look even better.')}
           </p>
 
