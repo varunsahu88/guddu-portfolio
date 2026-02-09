@@ -328,32 +328,86 @@ function App() {
     setContactDraftResult(`Subject: Project Inquiry\n\nHi Guddu,\n\nI'm interested in discussing: ${contactDraftInput}\n\nLooking forward to connecting!\n\nBest regards`);
   };
 
-  const ProjectCard = ({ p, isStatic = false }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: false }}
-      className="group relative bg-zinc-900 border border-zinc-800 p-4 md:p-8 rounded-[1.2rem] md:rounded-[2.5rem] overflow-hidden h-[160px] md:h-[420px] flex flex-col justify-end shadow-lg transition-all font-black uppercase"
-    >
-      <a href={String(p.link)} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      </a>
-      {isAdmin && !isStatic && (
-        <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteProject(p.id); }}
-          className="absolute top-4 left-4 p-2 bg-black/60 text-red-500 rounded-full hover:bg-red-500 transition-all z-30 border border-white/5 shadow-xl"
-        >
-          <Trash2 size={16} />
-        </button>
-      )}
-      <ArrowUpRight className="absolute top-4 right-4 md:top-8 md:right-8 text-zinc-700 group-hover:text-white transition-all w-4 h-4 md:w-7 md:h-7" />
-      <div className="relative z-10 pointer-events-none text-left font-black uppercase">
-        <p className="text-orange-500 text-[7px] md:text-[9px] tracking-[0.2em] mb-1 md:mb-2">{String(p.cat)}</p>
-        <h3 className="text-xs md:text-3xl font-black truncate text-white">{String(p.title)}</h3>
-        {p.desc && <p className="hidden md:block text-[8px] md:text-xs text-zinc-500 mt-1 md:mt-3 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium leading-relaxed">{String(p.desc)}</p>}
-      </div>
-    </motion.div>
-  );
+  const ProjectCard = ({ p, isStatic = false }) => {
+    const title = String(p?.title || '').trim() || 'Untitled Project';
+    const cat = String(p?.cat || '').trim() || 'Project';
+    const desc = String(p?.desc || '').trim();
+    const href = String(p?.link || '').trim();
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false }}
+        className="group relative border border-zinc-800/90 bg-zinc-950/70 backdrop-blur-md p-5 md:p-8 rounded-[1.25rem] md:rounded-[2.5rem] overflow-hidden h-[190px] md:h-[420px] flex flex-col justify-between shadow-[0_0_0_1px_rgba(255,255,255,0.02)] hover:shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)] transition-all"
+      >
+        {/* Click layer */}
+        <a href={href || '#'} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${title}`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 via-transparent to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-orange-500/10 blur-2xl group-hover:bg-orange-500/20 transition-colors duration-500" />
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-colors duration-500" />
+        </a>
+
+        {/* Admin delete */}
+        {isAdmin && !isStatic && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteProject(p.id); }}
+            className="absolute top-4 left-4 p-2 bg-black/60 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-all z-30 border border-white/5 shadow-xl"
+            aria-label="Delete project"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
+
+        {/* Top row */}
+        <div className="relative z-10 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2">
+              <span className="text-orange-400 text-[9px] md:text-[10px] tracking-[0.22em] font-black uppercase">
+                {cat}
+              </span>
+              <span className="h-[3px] w-[3px] rounded-full bg-zinc-700" />
+              <span className="text-zinc-500 text-[9px] md:text-[10px] tracking-[0.18em] font-black uppercase">
+                Case Study
+              </span>
+            </div>
+            <h3 className="mt-2 text-[15px] md:text-4xl font-black text-white truncate">
+              {title}
+            </h3>
+          </div>
+
+          <div className="shrink-0">
+            <div className="w-9 h-9 md:w-12 md:h-12 rounded-full border border-zinc-800 bg-black/30 flex items-center justify-center group-hover:border-orange-500/40 transition-colors">
+              <ArrowUpRight className="text-zinc-400 group-hover:text-white transition-colors w-4 h-4 md:w-6 md:h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom content */}
+        <div className="relative z-10">
+          <p className="text-[10px] md:text-sm text-zinc-400 leading-relaxed font-medium line-clamp-2 md:line-clamp-3">
+            {desc || 'Click to open. Add a short description from Admin to make this card look even better.'}
+          </p>
+
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="px-2.5 py-1 rounded-full border border-zinc-800 bg-black/30 text-[9px] md:text-[10px] tracking-[0.18em] text-zinc-300 uppercase font-black">
+                Live
+              </span>
+              <span className="px-2.5 py-1 rounded-full border border-zinc-800 bg-black/30 text-[9px] md:text-[10px] tracking-[0.18em] text-zinc-300 uppercase font-black truncate">
+                {cat}
+              </span>
+            </div>
+
+            <div className="text-[9px] md:text-[10px] tracking-[0.24em] uppercase font-black text-orange-400/90 group-hover:text-orange-300 transition-colors">
+              View ↗
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-100 font-sans selection:bg-orange-500 selection:text-white scroll-smooth overflow-x-hidden font-black uppercase">
