@@ -338,9 +338,9 @@ function App() {
     setContactDraftResult(`Subject: Project Inquiry\n\nHi Guddu,\n\nI'm interested in discussing: ${contactDraftInput}\n\nLooking forward to connecting!\n\nBest regards`);
   };
 
-  const ProjectCard = ({ p, isStatic = false }) => {
-    const title = String(p?.title || '').trim() || 'Untitled Project';
-    const cat = String(p?.cat || '').trim() || 'Project';
+  const ProjectCard = ({ p, isStatic = false, compact = false }) => {
+    const title = String(p?.title || '').trim() || (compact ? 'Untitled Experiment' : 'Untitled Project');
+    const cat = String(p?.cat || '').trim() || (compact ? 'Experiment' : 'Project');
     const desc = String(p?.desc || '').trim();
     const href = String(p?.link || '').trim();
 
@@ -349,7 +349,7 @@ function App() {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: false }}
-        className="group relative border border-zinc-800/90 bg-zinc-950/70 backdrop-blur-md p-5 md:p-8 rounded-[1.25rem] md:rounded-[2.5rem] overflow-hidden h-[190px] md:h-[420px] flex flex-col justify-between shadow-[0_0_0_1px_rgba(255,255,255,0.02)] hover:shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)] transition-all"
+        className={`group relative border border-zinc-800/90 bg-zinc-950/70 backdrop-blur-md ${compact ? 'p-4 md:p-6 rounded-[1.2rem] md:rounded-[2rem] h-[210px] md:h-[320px]' : 'p-5 md:p-8 rounded-[1.25rem] md:rounded-[2.5rem] h-[190px] md:h-[420px]'} overflow-hidden flex flex-col justify-between shadow-[0_0_0_1px_rgba(255,255,255,0.02)] hover:shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)] transition-all`}
       >
         {/* Click layer */}
         <a href={href || '#'} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-0" aria-label={`Open ${title}`}>
@@ -381,22 +381,22 @@ function App() {
                 Case Study
               </span>
             </div>
-            <h3 className="mt-2 text-[15px] md:text-4xl font-black text-white truncate">
+            <h3 className={`mt-2 font-black text-white truncate ${compact ? 'text-[14px] md:text-2xl' : 'text-[15px] md:text-4xl'}`}>
               {title}
             </h3>
           </div>
 
           <div className="shrink-0">
-            <div className="w-9 h-9 md:w-12 md:h-12 rounded-full border border-zinc-800 bg-black/30 flex items-center justify-center group-hover:border-orange-500/40 transition-colors">
-              <ArrowUpRight className="text-zinc-400 group-hover:text-white transition-colors w-4 h-4 md:w-6 md:h-6" />
+            <div className={`rounded-full border border-zinc-800 bg-black/30 flex items-center justify-center group-hover:border-orange-500/40 transition-colors ${compact ? 'w-9 h-9 md:w-10 md:h-10' : 'w-9 h-9 md:w-12 md:h-12'}`}>
+              <ArrowUpRight className={`text-zinc-400 group-hover:text-white transition-colors ${compact ? 'w-4 h-4 md:w-5 md:h-5' : 'w-4 h-4 md:w-6 md:h-6'}`} />
             </div>
           </div>
         </div>
 
         {/* Bottom content */}
         <div className="relative z-10">
-          <p className="text-[10px] md:text-sm text-zinc-400 leading-relaxed font-medium line-clamp-2 md:line-clamp-3">
-            {desc || 'Click to open. Add a short description from Admin to make this card look even better.'}
+          <p className={`text-zinc-400 leading-relaxed font-medium ${compact ? 'text-[10px] md:text-xs line-clamp-3' : 'text-[10px] md:text-sm line-clamp-2 md:line-clamp-3'}`}>
+            {desc || (compact ? 'Quick experiment. Click to open.' : 'Click to open. Add a short description from Admin to make this card look even better.')}
           </p>
 
           <div className="mt-4 flex items-center justify-between gap-3">
@@ -626,10 +626,10 @@ function App() {
       <section id="projects" className="py-16 md:py-32 px-6 max-w-7xl mx-auto relative z-10 font-black uppercase">
         <h2 className="text-4xl md:text-[7.8rem] font-black tracking-tighter uppercase mb-8 md:mb-12 text-white leading-none font-black uppercase font-black uppercase">Experiments<span className="text-orange-500 font-black uppercase font-black uppercase">.</span></h2>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-10 font-black uppercase">
-          <ProjectCard p={{ title: "JuiceVerse", cat: "Live Demo", link: "https://varunsahu88.github.io/Juiceverse/", desc: "Branding exploration." }} isStatic={true} />
-          <ProjectCard p={{ title: "Portfort", cat: "Concept", link: "https://varunsahu88.github.io/portfort02/index.html", desc: "Portfolio experiment." }} isStatic={true} />
-          <ProjectCard p={{ title: "Geneva", cat: "Featured", link: "https://github.com/varunsahu88", desc: "Dashboard UI and AI logic." }} isStatic={true} />
-          {projects.map(p => <ProjectCard key={p.id} p={p} />)}
+          <ProjectCard compact={true} p={{ title: "JuiceVerse", cat: "Live Demo", link: "https://varunsahu88.github.io/Juiceverse/", desc: "Branding exploration." }} isStatic={true} />
+          <ProjectCard compact={true} p={{ title: "Portfort", cat: "Concept", link: "https://varunsahu88.github.io/portfort02/index.html", desc: "Portfolio experiment." }} isStatic={true} />
+          <ProjectCard compact={true} p={{ title: "Geneva", cat: "Featured", link: "https://github.com/varunsahu88", desc: "Dashboard UI and AI logic." }} isStatic={true} />
+          {projects.map(p => <ProjectCard compact={true} key={p.id} p={p} />)}
           {isAdmin && (
             <div className="relative bg-zinc-900 border-2 border-dashed border-orange-500/30 p-4 md:p-10 rounded-[1.2rem] md:rounded-[3rem] flex flex-col justify-center h-[160px] md:h-[400px] shadow-2xl font-black uppercase">
               <form onSubmit={handleAddProject} className="space-y-2 md:space-y-4 text-center font-black uppercase font-black uppercase">
