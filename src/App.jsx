@@ -199,12 +199,22 @@ function App() {
   };
 
   const handleDeleteProject = async (id) => {
-    if (!isAdmin || !user) return;
-    if (!window.confirm("Bhai remove kar dein?")) return;
+    if (!isAdmin || !user) {
+      alert('Admin lock open nahi hai. Pehle Admin unlock karo.');
+      return;
+    }
+    if (!id) {
+      alert('Project id missing.');
+      return;
+    }
+    if (!window.confirm('Bhai remove kar dein?')) return;
+
     try {
       await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', id));
     } catch (err) {
-      console.error("Remove failed");
+      console.error('Remove failed:', err);
+      const msg = (err && (err.message || err.code)) ? `${err.code || ''} ${err.message || ''}`.trim() : 'Unknown error';
+      alert(`Delete nahi hua. Reason: ${msg}`);
     }
   };
 
